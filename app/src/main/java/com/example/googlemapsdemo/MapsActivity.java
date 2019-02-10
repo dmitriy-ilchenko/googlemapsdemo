@@ -1,9 +1,14 @@
 package com.example.googlemapsdemo;
 
+import android.Manifest;
 import android.graphics.Color;
-import android.support.annotation.NonNull;
-import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatActivity;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -17,6 +22,7 @@ import com.google.android.gms.maps.model.Gap;
 import com.google.android.gms.maps.model.JointType;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PointOfInterest;
 import com.google.android.gms.maps.model.Polygon;
 import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.Polyline;
@@ -25,17 +31,55 @@ import com.google.android.gms.maps.model.RoundCap;
 
 import java.util.Arrays;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnPolylineClickListener, GoogleMap.OnPolygonClickListener, GoogleMap.OnCircleClickListener {
+public class MapsActivity extends AppCompatActivity implements
+        OnMapReadyCallback,
+        GoogleMap.OnPolylineClickListener,
+        GoogleMap.OnPolygonClickListener,
+        GoogleMap.OnCircleClickListener,
+        GoogleMap.OnPoiClickListener
+{
+    private static final int PERMISSION_REQUEST_CODE = 101;
+    private static final String[] PERMISSIONS = { Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION };
+
+    private static final String[] MAP_TYPES = { "None", "Normal", "Satellite", "Terrain", "Hybrid" };
+
+    private Toast toast;
+    private GoogleMap googleMap;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_maps);
+
+        requestPermissions(PERMISSIONS);
         initMapFragment();
     }
 
     @Override
+    public boolean onCreateOptionsMenu(@NonNull Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_map, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId() == R.id.item_select_map_type) {
+            showMapTypeSelectionDialog();
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
     public void onMapReady(@NonNull GoogleMap googleMap) {
+        this.googleMap = googleMap;
+
+        googleMap.setOnPoiClickListener(this);
+
+        setMapPadding(googleMap);
+        enableMyLocationButton(googleMap);
+
         showLocation(googleMap);
         showPolyline(googleMap);
         showPolygon(googleMap);
@@ -60,19 +104,66 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     @Override
-    public void onCircleClick(Circle circle) {
+    public void onCircleClick(@NonNull Circle circle) {
         int fillColor = circle.getFillColor();
         int strokeColor = circle.getStrokeColor();
         circle.setFillColor(strokeColor);
         circle.setStrokeColor(fillColor);
     }
 
+    @Override
+    public void onPoiClick(@NonNull PointOfInterest pointOfInterest) {
+        String message =
+                "Name = " + pointOfInterest.name + "\n" +
+                "PlaceId = " + pointOfInterest.placeId + "\n" +
+                "Coordinates = " + pointOfInterest.latLng.toString();
+
+        showToast(message);
+    }
+
+
+    private void requestPermissions(@NonNull String[] permissions) {
+        PermissionsUtil.requestPermissions(this, permissions, PERMISSION_REQUEST_CODE);
+    }
 
     private void initMapFragment() {
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         if (mapFragment != null) {
             mapFragment.getMapAsync(this);
         }
+    }
+
+    private void showMapTypeSelectionDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("Map type")
+                .setItems(MAP_TYPES, (dialog, which) -> setMapType(googleMap, which))
+                .create()
+                .show();
+    }
+
+    private void showToast(@NonNull String message) {
+        if (toast != null) {
+            toast.cancel();
+        }
+        toast = Toast.makeText(this, message, Toast.LENGTH_LONG);
+        toast.show();
+    }
+
+
+    private void enableMyLocationButton(@NonNull GoogleMap googleMap) {
+        try {
+            googleMap.setMyLocationEnabled(true);
+        } catch (SecurityException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private void setMapPadding(@NonNull GoogleMap googleMap) {
+        googleMap.setPadding(0, 0, 100, 100);
+    }
+
+    private void setMapType(@NonNull GoogleMap googleMap, int mapType) {
+        googleMap.setMapType(mapType);
     }
 
     private void showLocation(@NonNull GoogleMap googleMap) {
