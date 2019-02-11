@@ -21,6 +21,7 @@ import com.google.android.gms.maps.model.Dot;
 import com.google.android.gms.maps.model.Gap;
 import com.google.android.gms.maps.model.JointType;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PointOfInterest;
 import com.google.android.gms.maps.model.Polygon;
@@ -77,6 +78,7 @@ public class MapsActivity extends AppCompatActivity implements
 
         googleMap.setOnPoiClickListener(this);
 
+        applyMapStyle(googleMap);
         setMapPadding(googleMap);
         enableMyLocationButton(googleMap);
 
@@ -230,5 +232,11 @@ public class MapsActivity extends AppCompatActivity implements
         googleMap.addCircle(circleOptions);
 
         googleMap.setOnCircleClickListener(this);
+    }
+
+
+    private void applyMapStyle(@NonNull GoogleMap googleMap) {
+        MapStyleOptions mapStyleOptions = MapStyleOptions.loadRawResourceStyle(this, R.raw.map_style);
+        googleMap.setMapStyle(mapStyleOptions);
     }
 }
