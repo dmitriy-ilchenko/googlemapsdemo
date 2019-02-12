@@ -2,6 +2,7 @@ package com.example.googlemapsdemo;
 
 import android.Manifest;
 import android.graphics.Color;
+import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
@@ -37,7 +38,15 @@ public class MapsActivity extends AppCompatActivity implements
         GoogleMap.OnPolylineClickListener,
         GoogleMap.OnPolygonClickListener,
         GoogleMap.OnCircleClickListener,
-        GoogleMap.OnPoiClickListener
+        GoogleMap.OnPoiClickListener,
+        GoogleMap.OnMapClickListener,
+        GoogleMap.OnMapLongClickListener,
+        GoogleMap.OnCameraMoveStartedListener,
+        GoogleMap.OnCameraMoveListener,
+        GoogleMap.OnCameraMoveCanceledListener,
+        GoogleMap.OnCameraIdleListener,
+        GoogleMap.OnMyLocationButtonClickListener,
+        GoogleMap.OnMyLocationClickListener
 {
     private static final int PERMISSION_REQUEST_CODE = 101;
     private static final String[] PERMISSIONS = { Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION };
@@ -76,7 +85,17 @@ public class MapsActivity extends AppCompatActivity implements
     public void onMapReady(@NonNull GoogleMap googleMap) {
         this.googleMap = googleMap;
 
+        googleMap.setOnMapClickListener(this);
+        googleMap.setOnMapLongClickListener(this);
         googleMap.setOnPoiClickListener(this);
+
+        googleMap.setOnMyLocationButtonClickListener(this);
+        googleMap.setOnMyLocationClickListener(this);
+
+        googleMap.setOnCameraIdleListener(this);
+        googleMap.setOnCameraMoveStartedListener(this);
+        googleMap.setOnCameraMoveListener(this);
+        googleMap.setOnCameraMoveCanceledListener(this);
 
         applyMapStyle(googleMap);
         setMapPadding(googleMap);
@@ -86,6 +105,26 @@ public class MapsActivity extends AppCompatActivity implements
         showPolyline(googleMap);
         showPolygon(googleMap);
         showCircle(googleMap);
+    }
+
+    @Override
+    public void onMapClick(@NonNull LatLng latLng) {
+        showToast(String.format("Map click, location = %s", latLng.toString()));
+    }
+
+    @Override
+    public void onMapLongClick(@NonNull LatLng latLng) {
+        showToast(String.format("Map long click, location = %s", latLng.toString()));
+    }
+
+    @Override
+    public void onPoiClick(@NonNull PointOfInterest pointOfInterest) {
+        String message =
+                "Name = " + pointOfInterest.name + "\n" +
+                        "PlaceId = " + pointOfInterest.placeId + "\n" +
+                        "Coordinates = " + pointOfInterest.latLng.toString();
+
+        showToast(message);
     }
 
     @Override
@@ -114,13 +153,56 @@ public class MapsActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void onPoiClick(@NonNull PointOfInterest pointOfInterest) {
-        String message =
-                "Name = " + pointOfInterest.name + "\n" +
-                "PlaceId = " + pointOfInterest.placeId + "\n" +
-                "Coordinates = " + pointOfInterest.latLng.toString();
+    public boolean onMyLocationButtonClick() {
+        showToast("onMyLocationButtonClick");
+        return true;
+    }
 
-        showToast(message);
+    @Override
+    public void onMyLocationClick(@NonNull Location location) {
+        showToast(String.format("onMyLocationClick, %s", location.toString()));
+    }
+
+    @Override
+    public void onCameraMoveStarted(int reason) {
+        String message = null;
+
+        switch (reason) {
+            case GoogleMap.OnCameraMoveStartedListener.REASON_GESTURE: {
+                message = "The user gestured on the map.";
+                break;
+            }
+            case GoogleMap.OnCameraMoveStartedListener.REASON_API_ANIMATION: {
+                message = "The user tapped something on the map.";
+                break;
+            }
+            case GoogleMap.OnCameraMoveStartedListener.REASON_DEVELOPER_ANIMATION: {
+                message = "The app moved the camera.";
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+
+        if (message != null) {
+            showToast(message);
+        }
+    }
+
+    @Override
+    public void onCameraMove() {
+        //showToast("onCameraMove");
+    }
+
+    @Override
+    public void onCameraMoveCanceled() {
+        showToast("onCameraMoveCanceled");
+    }
+
+    @Override
+    public void onCameraIdle() {
+        showToast("onCameraIdle");
     }
 
 
