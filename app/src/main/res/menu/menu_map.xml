@@ -8,4 +8,19 @@
         android:title="Select map type"
         app:showAsAction="never"
         />
+    <item
+        android:id="@+id/item_zoom_in"
+        android:title="Zoom in"
+        app:showAsAction="never"
+        />
+    <item
+        android:id="@+id/item_zoom_out"
+        android:title="Zoom out"
+        app:showAsAction="never"
+        />
+    <item
+        android:id="@+id/item_move_camera_to_random_location"
+        android:title="Move camera to random location"
+        app:showAsAction="never"
+        />
 </menu>

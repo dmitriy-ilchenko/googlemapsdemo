@@ -11,10 +11,12 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.Dash;
@@ -75,8 +77,23 @@ public class MapsActivity extends AppCompatActivity implements
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if (item.getItemId() == R.id.item_select_map_type) {
-            showMapTypeSelectionDialog();
+        switch (item.getItemId()) {
+            case R.id.item_select_map_type: {
+                showMapTypeSelectionDialog();
+                break;
+            }
+            case R.id.item_zoom_in: {
+                zoomIn();
+                break;
+            }
+            case R.id.item_zoom_out: {
+                zoomOut();
+                break;
+            }
+            case R.id.item_move_camera_to_random_location: {
+                moveCameraToRandomLocation();
+                break;
+            }
         }
         return super.onOptionsItemSelected(item);
     }
@@ -234,6 +251,26 @@ public class MapsActivity extends AppCompatActivity implements
     }
 
 
+    private void zoomIn() {
+        googleMap.animateCamera(CameraUpdateFactory.zoomIn());
+    }
+
+    private void zoomOut() {
+        googleMap.animateCamera(CameraUpdateFactory.zoomOut());
+    }
+
+    private void moveCameraToRandomLocation() {
+        CameraPosition cameraPosition = CameraPosition.builder()
+                .bearing(RandomGenerator.getRandomFloat(0, 360))
+                .tilt(RandomGenerator.getRandomFloat(0, 30))
+                .target(new LatLng(RandomGenerator.getRandomFloat(0, 30), RandomGenerator.getRandomFloat(0, 30)))
+                .zoom(RandomGenerator.getRandomFloat(googleMap.getMinZoomLevel(), googleMap.getMaxZoomLevel()))
+                .build();
+        CameraUpdate cameraUpdate = CameraUpdateFactory.newCameraPosition(cameraPosition);
+        googleMap.moveCamera(cameraUpdate);
+    }
+
+
     private void enableMyLocationButton(@NonNull GoogleMap googleMap) {
         try {
             googleMap.setMyLocationEnabled(true);
@@ -249,6 +286,7 @@ public class MapsActivity extends AppCompatActivity implements
     private void setMapType(@NonNull GoogleMap googleMap, int mapType) {
         googleMap.setMapType(mapType);
     }
+
 
     private void showLocation(@NonNull GoogleMap googleMap) {
         LatLng sydney = new LatLng(-34, 151);
