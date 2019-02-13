@@ -16,15 +16,19 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.Dash;
 import com.google.android.gms.maps.model.Dot;
 import com.google.android.gms.maps.model.Gap;
+import com.google.android.gms.maps.model.GroundOverlayOptions;
 import com.google.android.gms.maps.model.JointType;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PointOfInterest;
 import com.google.android.gms.maps.model.Polygon;
@@ -32,8 +36,10 @@ import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.maps.model.RoundCap;
+import com.google.android.gms.maps.model.TileOverlayOptions;
 
 import java.util.Arrays;
+import java.util.Locale;
 
 public class MapsActivity extends AppCompatActivity implements
         OnMapReadyCallback,
@@ -48,8 +54,7 @@ public class MapsActivity extends AppCompatActivity implements
         GoogleMap.OnCameraMoveCanceledListener,
         GoogleMap.OnCameraIdleListener,
         GoogleMap.OnMyLocationButtonClickListener,
-        GoogleMap.OnMyLocationClickListener
-{
+        GoogleMap.OnMyLocationClickListener, GoogleMap.OnMarkerClickListener, GoogleMap.OnMarkerDragListener {
     private static final int PERMISSION_REQUEST_CODE = 101;
     private static final String[] PERMISSIONS = { Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION };
 
@@ -118,10 +123,12 @@ public class MapsActivity extends AppCompatActivity implements
         setMapPadding(googleMap);
         enableMyLocationButton(googleMap);
 
-        showLocation(googleMap);
+        showMarker(googleMap);
         showPolyline(googleMap);
         showPolygon(googleMap);
         showCircle(googleMap);
+        showGroundOverlay(googleMap);
+        showTileOverlay(googleMap);
     }
 
     @Override
@@ -143,6 +150,38 @@ public class MapsActivity extends AppCompatActivity implements
 
         showToast(message);
     }
+
+
+    @Override
+    public boolean onMarkerClick(@NonNull Marker marker) {
+        Integer clickCount = (Integer) marker.getTag();
+        if (clickCount == null) {
+            clickCount = 0;
+        }
+
+        clickCount++;
+        marker.setTag(clickCount);
+
+        showToast(String.format(Locale.ENGLISH,"Marker click count = %d", clickCount));
+
+        return false;
+    }
+
+    @Override
+    public void onMarkerDragStart(@NonNull Marker marker) {
+        showToast("onMarkerDragStart");
+    }
+
+    @Override
+    public void onMarkerDrag(@NonNull Marker marker) {
+        showToast("onMarkerDrag");
+    }
+
+    @Override
+    public void onMarkerDragEnd(@NonNull Marker marker) {
+        showToast("onMarkerDragEnd");
+    }
+
 
     @Override
     public void onPolylineClick(@NonNull Polyline polyline) {
@@ -288,10 +327,22 @@ public class MapsActivity extends AppCompatActivity implements
     }
 
 
-    private void showLocation(@NonNull GoogleMap googleMap) {
+    private void showMarker(@NonNull GoogleMap googleMap) {
         LatLng sydney = new LatLng(-34, 151);
-        googleMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-        //googleMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+        BitmapDescriptor markerIcon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA);
+
+        MarkerOptions markerOptions = new MarkerOptions()
+                .position(sydney)
+                .title("Marker in Sydney")
+                .rotation(30f)
+                .flat(false)
+                .draggable(true)
+                .icon(markerIcon);
+
+        googleMap.addMarker(markerOptions);
+
+        googleMap.setOnMarkerClickListener(this);
+        googleMap.setOnMarkerDragListener(this);
     }
 
     private void showPolyline(@NonNull GoogleMap googleMap) {
@@ -352,6 +403,24 @@ public class MapsActivity extends AppCompatActivity implements
         googleMap.addCircle(circleOptions);
 
         googleMap.setOnCircleClickListener(this);
+    }
+
+    private void showGroundOverlay(@NonNull GoogleMap googleMap) {
+        LatLng newark = new LatLng(40.714086, -74.228697);
+
+        GroundOverlayOptions newarkMap = new GroundOverlayOptions()
+                .image(BitmapDescriptorFactory.fromResource(R.drawable.newark))
+                .position(newark, 8600f, 6500f);
+
+        googleMap.addGroundOverlay(newarkMap);
+    }
+
+    private void showTileOverlay(@NonNull GoogleMap googleMap) {
+        MyTileProvider tileProvider = new MyTileProvider();
+        TileOverlayOptions tileOverlayOptions = new TileOverlayOptions()
+                .tileProvider(tileProvider)
+                .transparency(0.5f);
+        googleMap.addTileOverlay(tileOverlayOptions);
     }
 
 
