@@ -119,7 +119,7 @@ public class MapsActivity extends AppCompatActivity implements
         googleMap.setOnCameraMoveListener(this);
         googleMap.setOnCameraMoveCanceledListener(this);
 
-        applyMapStyle(googleMap);
+        //applyMapStyle(googleMap);
         setMapPadding(googleMap);
         enableMyLocationButton(googleMap);
 
@@ -128,7 +128,7 @@ public class MapsActivity extends AppCompatActivity implements
         showPolygon(googleMap);
         showCircle(googleMap);
         showGroundOverlay(googleMap);
-        showTileOverlay(googleMap);
+        //showTileOverlay(googleMap);
     }
 
     @Override
